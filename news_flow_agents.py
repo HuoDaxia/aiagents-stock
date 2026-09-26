@@ -16,25 +16,26 @@ logger = logging.getLogger(__name__)
 class NewsFlowAgents:
     """新闻流量智能分析代理"""
     
-    def __init__(self, model: str = "deepseek-chat"):
+    def __init__(self, model: str = None):
         """
         初始化代理
         
         Args:
-            model: 使用的模型，默认 deepseek-chat
+            model: 使用的模型，默认从 .env 的 DEFAULT_MODEL_NAME 读取
         """
-        self.model = model
+        import config
+        self.model = model or config.DEFAULT_MODEL_NAME
         self.deepseek_client = None
         self._init_client()
     
     def _init_client(self):
-        """初始化DeepSeek客户端"""
+        """初始化AI客户端（OrcaRouter 或 DeepSeek）"""
         try:
-            from deepseek_client import DeepSeekClient
-            self.deepseek_client = DeepSeekClient(model=self.model)
-            logger.info(f"✅ DeepSeek客户端初始化成功，模型: {self.model}")
+            from llm_client import get_llm_client
+            self.deepseek_client = get_llm_client(model=self.model)
+            logger.info(f"✅ AI客户端初始化成功，模型: {self.model}")
         except Exception as e:
-            logger.error(f"❌ DeepSeek客户端初始化失败: {e}")
+            logger.error(f"❌ AI客户端初始化失败: {e}")
             self.deepseek_client = None
     
     def is_available(self) -> bool:

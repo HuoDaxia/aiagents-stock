@@ -12,6 +12,10 @@ import sys
 import io
 from data_source_manager import data_source_manager
 
+# 应用请求补丁（请求头/超时）
+from utils.akshare_helper import patch_requests
+patch_requests()
+
 warnings.filterwarnings('ignore')
 
 # 设置标准输出编码为UTF-8（仅在命令行环境，避免streamlit冲突）
@@ -164,11 +168,11 @@ class MarketSentimentDataFetcher:
             if 'date' in df.columns:
                 df['date'] = pd.to_datetime(df['date'])
             
-            # 计算各项差值
-            df['HO'] = df['high'] - df['open']    # 最高价-开盘价
-            df['OL'] = df['open'] - df['low']     # 开盘价-最低价
-            df['HCY'] = df['high'] - df['close'].shift(1)  # 最高价-前收
-            df['CYL'] = df['close'].shift(1) - df['low']   # 前收-最低价
+            # 计算各项差值（BR指标按标准规则只统计正数部分，即负值取0）
+            df['HO'] = (df['high'] - df['open']).clip(lower=0)                  # 最高价-开盘价
+            df['OL'] = (df['open'] - df['low']).clip(lower=0)                   # 开盘价-最低价
+            df['HCY'] = (df['high'] - df['close'].shift(1)).clip(lower=0)       # max(0, 最高价-前收)
+            df['CYL'] = (df['close'].shift(1) - df['low']).clip(lower=0)        # max(0, 前收-最低价)
             
             # 计算AR指标
             df['AR'] = (df['HO'].rolling(window=self.arbr_period).sum() / 

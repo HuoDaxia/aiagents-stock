@@ -6,10 +6,12 @@
 """
 
 import pandas as pd
-import pywencai
+from utils.pywencai_helper import safe_get
 from datetime import datetime
 from typing import Tuple, Optional
 import time
+
+from utils.pywencai_helper import safe_get
 
 
 class LowPriceBullSelector:
@@ -48,7 +50,7 @@ class LowPriceBullSelector:
             # 构建查询语句（按成交额由小至大排名）
             query = (
                 "股价<10元，"
-                "净利润增长率(净利润同比增长率)≥100%，"
+                "净利润同比增长率≥100%，"
                 "非st，"
                 "非科创板，"
                 "非创业板，"
@@ -59,8 +61,8 @@ class LowPriceBullSelector:
             print(f"\n查询语句: {query}")
             print(f"正在调用问财接口...")
             
-            # 调用pywencai
-            result = pywencai.get(query=query, loop=True)
+            # 调用pywencai（安全调用，处理接口不可用）
+            result = safe_get(query=query, loop=True)
             
             if result is None:
                 return False, None, "问财接口返回None，请检查网络或稍后重试"

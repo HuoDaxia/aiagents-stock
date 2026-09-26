@@ -8,6 +8,7 @@
 import logging
 from typing import Tuple, Optional
 import pandas as pd
+from utils.pywencai_helper import safe_get
 
 
 class SmallCapSelector:
@@ -43,7 +44,7 @@ class SmallCapSelector:
             query = (
                 "总市值≤50亿，"
                 "营收增长率≥10%，"
-                "净利润增长率(净利润同比增长率)≥100%，"
+                "净利润同比增长率≥100%，"
                 "沪深A股，"
                 "非ST，"
                 "非创业板，"
@@ -54,7 +55,7 @@ class SmallCapSelector:
             self.logger.info(f"开始执行小市值策略选股，查询条件: {query}")
             
             # 调用pywencai
-            result = pywencai.get(query=query, loop=True)
+            result = safe_get(query=query, loop=True)
             
             if result is None or result.empty:
                 self.logger.warning("未获取到符合条件的股票")

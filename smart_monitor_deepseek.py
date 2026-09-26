@@ -7,6 +7,7 @@ import logging
 from typing import Dict, List, Optional
 from datetime import datetime, time
 import pytz
+import config
 
 
 class SmartMonitorDeepSeek:
@@ -14,15 +15,23 @@ class SmartMonitorDeepSeek:
 
     def __init__(self, api_key: str):
         """
-        初始化DeepSeek客户端
-        
+        初始化AI客户端（OrcaRouter 优先，否则 DeepSeek）
+
         Args:
-            api_key: DeepSeek API密钥
+            api_key: DeepSeek API密钥（未配置 OrcaRouter 时使用）
         """
-        self.api_key = api_key
-        self.base_url = "https://api.deepseek.com/v1"
+        if config.ORCAROUTER_API_KEY:
+            self.api_key = config.ORCAROUTER_API_KEY
+            self.base_url = config.ORCAROUTER_BASE_URL
+            self.default_model = config.ORCAROUTER_MODEL
+            self.provider_name = "OrcaRouter"
+        else:
+            self.api_key = api_key
+            self.base_url = config.DEEPSEEK_BASE_URL
+            self.default_model = config.DEFAULT_MODEL_NAME
+            self.provider_name = "DeepSeek"
         self.headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
         self.logger = logging.getLogger(__name__)
@@ -138,7 +147,7 @@ class SmartMonitorDeepSeek:
                 'can_trade': False
             }
 
-    def chat_completion(self, messages: List[Dict], model: str = "deepseek-chat",
+    def chat_completion(self, messages: List[Dict], model: str = None,
                        temperature: float = 0.7, max_tokens: int = 2000) -> Dict:
         """
         调用DeepSeek API
@@ -153,6 +162,8 @@ class SmartMonitorDeepSeek:
             API响应
         """
         import requests
+        
+        model = model or self.default_model
         
         payload = {
             "model": model,

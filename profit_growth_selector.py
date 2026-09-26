@@ -8,6 +8,7 @@
 import logging
 from typing import Tuple, Optional
 import pandas as pd
+from utils.pywencai_helper import safe_get
 
 
 class ProfitGrowthSelector:
@@ -39,18 +40,18 @@ class ProfitGrowthSelector:
             
             # 构建查询语句（按成交额由小至大排名）
             query = (
-                "净利润增长率(净利润同比增长率)≥10%，"
+                "净利润同比增长率≥10%，"
                 "非科创板，"
                 "非创业板，"
                 "非ST，"
-                "深圳A股，"
+                "沪深A股，"
                 "成交额由小至大排名"
             )
             
             self.logger.info(f"开始执行净利增长选股，查询条件: {query}")
             
             # 调用pywencai
-            result = pywencai.get(query=query, loop=True)
+            result = safe_get(query=query, loop=True)
             
             if result is None or result.empty:
                 self.logger.warning("未获取到符合条件的股票")
